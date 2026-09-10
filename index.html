@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>创意织网机 · 高价值创意生成与实时评估引擎</title>
+<style>
+:root{
+  --bg:#0a0d1a;
+  --panel:#111527;
+  --panel2:#171c33;
+  --line:#232b4d;
+  --text:#e4e8f5;
+  --muted:#8a93b5;
+  --accent:#a78bfa;
+  --accent2:#fbbf24;
+  --danger:#f87171;
+  --ok:#34d399;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--text);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;font-size:14px;line-height:1.55}
+body{background-image:radial-gradient(1000px 500px at 80% -150px, rgba(167,139,250,.08), transparent 60%);min-height:100vh;padding:16px 18px 30px}
+.wrap{max-width:1320px;margin:0 auto}
+
+/* 头部 */
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.brand h1{font-size:20px;font-weight:650;letter-spacing:.5px}
+.brand h1 .badge{font-size:11px;color:var(--accent);border:1px solid rgba(167,139,250,.4);border-radius:999px;padding:2px 9px;margin-left:8px;vertical-align:3px;font-weight:500}
+.brand p{font-size:12px;color:var(--muted);margin-top:2px}
+.ctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{border:1px solid #2e3760;background:#1a2140;color:var(--text);border-radius:8px;padding:8px 14px;cursor:pointer;font-size:13px;transition:background .15s}
+.btn:hover{background:#242d55}
+.btn.primary{background:var(--accent);border-color:transparent;color:#1a1030;font-weight:650}
+.btn.primary:hover{background:#c4b0fd}
+.btn.ghost{background:transparent}
+.seg{display:inline-flex;background:#0d1126;border:1px solid var(--line);border-radius:8px;padding:3px;gap:2px}
+.seg button{border:none;background:transparent;color:var(--muted);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12.5px;transition:background .15s,color .15s}
+.seg button.on{background:var(--accent);color:#1a1030;font-weight:600}
+
+/* 主布局 */
+main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.card h3{font-size:13px;font-weight:600;color:#c9d2ea;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h3 .meta{font-size:11px;color:var(--muted);font-weight:400;margin-left:auto}
+
+/* 领域筛选 */
+.domains{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.dchip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:#0d1126;color:var(--text);border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer;transition:opacity .15s,border-color .15s}
+.dchip:hover{border-color:#3b4678}
+.dchip.off{opacity:.35}
+.dchip .dot{width:8px;height:8px;border-radius:50%}
+
+/* 网络画布 */
+.netBox{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#070a16}
+#netCanvas{display:block;width:100%;height:480px}
+.netHint{position:absolute;left:12px;bottom:10px;font-size:11px;color:var(--muted);pointer-events:none}
+
+/* 卡片流 */
+#feed{display:flex;flex-direction:column;gap:9px;max-height:560px;overflow-y:auto;padding-right:4px}
+#feed::-webkit-scrollbar{width:6px}
+#feed::-webkit-scrollbar-thumb{background:#2a3358;border-radius:3px}
+.idea{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:11px 13px;cursor:pointer;transition:border-color .15s,transform .05s;position:relative}
+.idea:hover{border-color:#3d4a80}
+.idea:active{transform:translateY(1px)}
+.idea.hot{border-color:rgba(167,139,250,.55)}
+.ideaTop{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ideaTitle{font-size:14px;font-weight:600}
+.ideaTitle .fresh{font-size:10px;color:var(--accent);border:1px solid rgba(167,139,250,.4);border-radius:999px;padding:1px 7px;margin-left:6px;vertical-align:2px;font-weight:500}
+.dtag{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.dtag .dot{width:7px;height:7px;border-radius:50%}
+.rank{font-size:12px;font-weight:700;border-radius:6px;padding:1px 8px;margin-left:auto}
+.rank.S{background:rgba(251,191,36,.18);color:#fbbf24}
+.rank.A{background:rgba(52,211,153,.16);color:#34d399}
+.rank.B{background:rgba(129,140,248,.16);color:#818cf8}
+.rank.C{background:rgba(138,147,181,.16);color:#a5adc9}
+.ideaScore{font-size:15px;font-weight:700;color:var(--accent2);font-variant-numeric:tabular-nums}
+.ideaDesc{font-size:12.5px;color:#b7c0da;margin-top:5px;line-height:1.6}
+.dimRow{display:flex;gap:12px;margin-top:7px;flex-wrap:wrap}
+.dim{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.dim b{color:var(--text);font-variant-numeric:tabular-nums}
+.dimBar{width:52px;height:5px;border-radius:3px;background:#1d2442;overflow:hidden}
+.dimBar i{display:block;height:100%;border-radius:3px}
+.ideaRisk{font-size:10.5px;color:var(--muted);margin-top:5px}
+.ideaRisk b{color:var(--ok)}
+.idea .why{font-size:11px;color:#9aa3c2;margin-top:5px;line-height:1.5;border-top:1px dashed #262e52;padding-top:6px;display:none}
+.idea.open .why{display:block}
+.idea .fav{position:absolute;top:8px;right:10px;border:none;background:transparent;color:#5a6380;font-size:15px;cursor:pointer}
+.idea .fav.on{color:var(--accent2)}
+.empty{color:var(--muted);font-size:12.5px;text-align:center;padding:30px 0}
+
+/* 统计 */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
+.stat .k{font-size:11px;color:var(--muted)}
+.stat .v{font-size:18px;font-weight:650;font-variant-numeric:tabular-nums;margin-top:2px}
+.stat .sub{font-size:10.5px;color:var(--muted);margin-top:1px}
+
+/* 收藏 */
+#favList{display:flex;flex-direction:column;gap:7px;max-height:260px;overflow-y:auto}
+.favItem{display:flex;align-items:center;gap:8px;font-size:12px;border:1px solid var(--line);background:#0d1126;border-radius:8px;padding:7px 10px}
+.favItem .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.favItem .s{font-weight:700;color:var(--accent2);font-variant-numeric:tabular-nums}
+
+footer{margin-top:16px;text-align:center;font-size:12px;color:var(--muted)}
+
+@media (max-width:960px){
+  main{grid-template-columns:1fr}
+  #feed{max-height:420px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:560px){
+  body{padding:12px}
+  .netBox #netCanvas{height:340px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brand">
+    <h1>创意织网机 <span class="badge">IDEA NEXUS</span></h1>
+    <p>持续生成高价值创意 · 实时多维自动评估 · 跨领域创意网络（学术 / 商业 / 教育 / 科技 / 公益 …）</p>
+  </div>
+  <div class="ctrl">
+    <button class="btn primary" id="startBtn">暂停生成</button>
+    <button class="btn" id="manualBtn">立即生成</button>
+    <button class="btn ghost" id="clearBtn">清空</button>
+    <div class="seg" id="speedSeg" role="group" aria-label="生成速度">
+      <button class="sbtn" data-s="1000">快</button>
+      <button class="sbtn on" data-s="2500">中</button>
+      <button class="sbtn" data-s="4500">慢</button>
+    </div>
+  </div>
+</header>
+
+<section class="card domains" id="domainChips" aria-label="领域筛选"></section>
+
+<main>
+  <section class="left">
+    <div class="card">
+      <h3>创意网络图 <span class="meta" id="netMeta">0 个节点 · 实时生长</span></h3>
+      <div class="netBox">
+        <canvas id="netCanvas"></canvas>
+        <span class="netHint">节点 = 创意 · 颜色 = 领域 · 连线 = 概念关联 · 点击节点查看详情</span>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k">已生成创意</div><div class="v" id="stCount">0</div><div class="sub">个</div></div>
+      <div class="stat"><div class="k">高价值（S+A）</div><div class="v" id="stHigh">0</div><div class="sub">占比 0%</div></div>
+      <div class="stat"><div class="k">平均综合分</div><div class="v" id="stAvg">—</div><div class="sub">0-100</div></div>
+      <div class="stat"><div class="k">覆盖领域</div><div class="v" id="stDom">0</div><div class="sub">/ 9 个</div></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>评估体系 <span class="meta">创新 30% + 可行 25% + 应用 25% + 社会 20%</span></h3>
+      <div id="favList" style="max-height:none">
+        <div class="empty" style="padding:8px 0">评分维度：创新性（组合稀有度与方向新颖度）、可行性（技术成熟度与实现门槛）、应用价值（痛点强度与人群明确度）、社会价值（受益面与公共意义）；综合分加权得出，另附风险等级。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="card">
+      <h3>实时创意流 <span class="meta">自动评估中</span></h3>
+      <div id="feed"></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>高价值收藏 <span class="meta"><button class="btn ghost" id="exportBtn" style="padding:2px 10px;font-size:11px">导出 CSV</button></span></h3>
+      <div id="favList"></div>
+    </div>
+  </section>
+</main>
+
+<footer>纯前端离线运行 · 内容白名单生成 · 敏感领域自动规避 · 所有评估在本地实时完成</footer>
+
+</div>
+<script>
+"use strict";
+/* ============================================================
+   创意织网机 IDEA NEXUS
+   1) 领域白名单 + 敏感词过滤，安全生成
+   2) 组合式模板持续产出创意（开机即跑）
+   3) 四维实时评估（创新/可行/应用/社会）+ 风险 + 评级
+   4) Canvas 创意网络图，节点可点击
+   ============================================================ */
+
+/* ---------- 领域与概念池（白名单，避开敏感领域） ---------- */
+var DOMAINS = [
+  { id:'acad',  name:'学术科研', color:'#60a5fa', objs:['文献综述','实验数据','论文写作','科研协作','课题管理','学术会议','同行评审','文献检索','科研日志','研究选题'], dirs:['AI辅助','可视化','协作化','自动化','语义化','实时化','开源化','跨学科'] },
+  { id:'biz',   name:'商业创业', color:'#fbbf24', objs:['小微企业','供应链','客户运营','定价策略','品牌传播','门店管理','库存管理','会员体系','售后流程','选品分析'], dirs:['数据驱动','自动化','订阅化','个性化','轻量化','社区化','本地化','可追踪'] },
+  { id:'edu',   name:'教育学习', color:'#34d399', objs:['课堂互动','作业批改','语言学习','个性化练习','校园管理','家校沟通','在线课程','考试测评','专注训练','错题整理'], dirs:['游戏化','个性化','数据驱动','可视化','碎片化','互动化','自适应','无感化'] },
+  { id:'env',   name:'环保可持续', color:'#2dd4bf', objs:['垃圾分类','能耗管理','再生材料','水资源','城市绿化','包装减量','旧物回收','碳排放','共享骑行','社区菜园'], dirs:['循环化','可视化','社区化','轻量化','激励化','可追溯','本地化','节能化'] },
+  { id:'art',   name:'文化艺术', color:'#c084fc', objs:['非遗传承','数字文创','博物馆导览','音乐创作','摄影记录','手工艺','展览策展','地方故事','城市记忆','声音档案'], dirs:['沉浸式','数字化','交互化','社区化','生成式','策展化','时间轴','可参与'] },
+  { id:'com',   name:'社区公益', color:'#fb7185', objs:['社区互助','志愿服务','养老助老','残障辅助','邻里共享','应急互助','心理支持','公益募捐','闲置交换','陪诊陪聊'], dirs:['社区化','低门槛','可追踪','信任化','就近化','匿名化','互助化','透明化'] },
+  { id:'life',  name:'健康生活', color:'#a3e635', objs:['睡眠管理','运动打卡','饮食记录','久坐提醒','冥想放松','健康数据','习惯养成','压力缓解','饮水提醒','亲子活动'], dirs:['游戏化','可视化','个性化','无感化','轻量化','打卡化','社交化','数据驱动'] },
+  { id:'tech',  name:'科技前沿', color:'#818cf8', objs:['边缘计算','数字孪生','隐私计算','低代码','知识图谱','语音交互','计算机视觉','机器人','传感器网络','数据标注'], dirs:['实时化','自动化','模块化','可解释','隐私保护','边缘化','开源化','可组合'] },
+  { id:'home',  name:'家居生活', color:'#fb923c', objs:['智能家居','收纳整理','家庭记账','宠物照护','厨房烹饪','园艺种植','维修保养','亲子互动','通勤规划','家电管理'], dirs:['自动化','可视化','轻量化','个性化','语音优先','节能化','共享化','提醒化'] }
+];
+var VERBS = ['重新定义','把','让','为','给','将','帮','使','推动','打造'];
+var SOLUTION_WORDS = ['平台','工具','系统','社区','服务体系','课程','框架','装置','工作流','指南','方案','模块','实验室','地图'];
+var METAPHORS = ['一场探险','一场游戏','一次旅行','一段对话','一本会生长的书','一场展览','一个社区','一台仪器','一部纪录片','一条河流'];
+
+/* 敏感词黑名单：命中即丢弃重试（安全红线） */
+var BLOCK = ['政治','政府','选举','军事','武器','爆炸','毒品','赌博','博彩','彩票','色情','成人','暴力','血腥','宗教','民族对立','医疗','药物','治疗','诊断','手术','理财','炒股','股票','贷款','借贷','高利贷','整容','烟草','酒精','猎奇','虐待','自杀','黑客攻击','诈骗','洗钱','隐私窃取','监控他人'];
+
+/* ---------- 状态 ---------- */
+var state = {
+  running: true,
+  speed: 2500,
+  nodes: [],        // {id,title,domain,score,rank,x,y,r,idea,ts}
+  feed: [],
+  fav: [],
+  total: 0,
+  timer: null,
+  seq: 0
+};
+var activeDomains = {};   // id -> true
+DOMAINS.forEach(function(d){ activeDomains[d.id] = true; });
+
+/* ---------- 工具 ---------- */
+function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+function ri(a,b){ return a + Math.floor(Math.random() * (b - a + 1)); }
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+function shuffle(arr){
+  for(var i = arr.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+function containsBlocked(text){
+  for(var i = 0; i < BLOCK.length; i++){
+    if(text.indexOf(BLOCK[i]) >= 0) return true;
+  }
+  return false;
+}
+
+/* ---------- 生成器：组合式模板 ---------- */
+function generateIdea(){
+  var ids = [];
+  for(var k in activeDomains){ if(activeDomains[k]) ids.push(k); }
+  if(ids.length === 0) return null;
+  /* 40% 概率跨领域交叉（网的关键：跨界组合产生高价值） */
+  var cross = Math.random() < 0.4 && ids.length > 1;
+  var d1 = DOMAINS[DOMAINS.findIndex(function(d){ return d.id === pick(ids); })];
+  var d2 = null;
+  if(cross){
+    var other = ids.filter(function(id){ return id !== d1.id; });
+    d2 = DOMAINS[DOMAINS.findIndex(function(d){ return d.id === pick(other); })];
+  }
+  var obj = pick(d1.objs);
+  var dir = pick(d1.dirs);
+  var template = Math.floor(Math.random() * 3);
+  var title, desc, tags = [d1.name, dir];
+  if(template === 0){
+    title = '为' + obj + '打造' + dir + '的' + pick(SOLUTION_WORDS);
+  } else if(template === 1){
+    title = '让' + obj + '变成' + pick(METAPHORS);
+  } else {
+    var tech = d2 ? pick(d2.dirs) : pick(d1.dirs);
+    title = '基于' + tech + '，把' + obj + '改造成' + dir + '的' + pick(SOLUTION_WORDS);
+  }
+  if(d2){
+    tags.push(d2.name);
+    var t2 = pick(d2.objs);
+    desc = '跨领域组合：将「' + d1.name + '」的' + obj + '与「' + d2.name + '」的' + t2 + '结合，以「' + dir + '」为主线，解决' + obj + '场景中长期存在的低效与断点。';
+  } else {
+    desc = '面向' + d1.name + '场景：以「' + dir + '」重构' + obj + '，聚焦' + obj + '的用户痛点（效率/体验/成本），提供可落地的最小闭环。';
+  }
+  if(containsBlocked(title) || containsBlocked(desc)) return null;
+  var idea = { id: state.seq++, title: title, desc: desc, domain: d1, domain2: d2, obj: obj, dir: dir, tags: tags, ts: Date.now() };
+  return evaluate(idea);
+}
+
+/* ---------- 评估器（创新/可行/应用/社会 + 风险 + 评级） ---------- */
+var HIGH_NOVEL = ['去中心化','数字孪生','隐私计算','知识图谱','生成式','脑机','量子','边缘','语义化','跨学科'];
+var LOW_FEAS = ['量子','脑机','通用人工智能','可控核聚变','脑控','星际'];
+var HIGH_FEAS = ['小程序','公众号','APP','传感器','物联网','摄像头','二维码','打卡'];
+var HIGH_PAIN = ['作业批改','文献检索','库存','会员','养老','残障','睡眠','垃圾分类','能耗','通勤','维修','陪伴'];
+function evaluate(idea){
+  var why = [];
+  /* 创新性 */
+  var nov = 50;
+  if(idea.domain2){ nov += 22; why.push('跨领域交叉组合'); } else { nov += 6; }
+  var dir = idea.dir;
+  for(var i = 0; i < HIGH_NOVEL.length; i++){ if(dir.indexOf(HIGH_NOVEL[i]) >= 0){ nov += 12; why.push('方向新颖：' + dir); break; } }
+  nov += ri(-8, 8);
+  nov = clamp(nov, 12, 98);
+  /* 可行性 */
+  var feas = 62, j;
+  for(j = 0; j < LOW_FEAS.length; j++){ if((idea.title + idea.desc).indexOf(LOW_FEAS[j]) >= 0){ feas -= 18; why.push('依赖前沿技术，门槛高'); break; } }
+  for(j = 0; j < HIGH_FEAS.length; j++){ if((idea.title + idea.desc).indexOf(HIGH_FEAS[j]) >= 0){ feas += 12; why.push('技术成熟可快速落地'); break; } }
+  feas += ri(-7, 7);
+  feas = clamp(feas, 15, 96);
+  /* 应用价值 */
+  var app = 55, hit = false;
+  for(j = 0; j < HIGH_PAIN.length; j++){ if(idea.obj.indexOf(HIGH_PAIN[j]) >= 0 || idea.desc.indexOf(HIGH_PAIN[j]) >= 0){ app += 16; why.push('命中高频痛点'); hit = true; break; } }
+  if(!hit) app += 4;
+  if(idea.domain2) app += 5;
+  app += ri(-6, 6);
+  app = clamp(app, 15, 96);
+  /* 社会价值 */
+  var soc = 48;
+  if(idea.domain.id === 'com') soc += 22;
+  else if(idea.domain.id === 'edu' || idea.domain.id === 'env' || idea.domain.id === 'life' || idea.domain.id === 'acad') soc += 13;
+  else soc += 5;
+  soc += ri(-5, 5);
+  soc = clamp(soc, 15, 95);
+  var score = Math.round(nov * 0.30 + feas * 0.25 + app * 0.25 + soc * 0.20);
+  var rank = score >= 85 ? 'S' : score >= 72 ? 'A' : score >= 58 ? 'B' : 'C';
+  var risk = '低';
+  if(idea.domain2 && (idea.domain2.id === 'com' || idea.domain2.id === 'life')) risk = '中';
+  if(!why.length) why.push('结构完整的常规创新');
+  idea.scores = { nov: Math.round(nov), feas: Math.round(feas), app: Math.round(app), soc: Math.round(soc) };
+  idea.score = score;
+  idea.rank = rank;
+  idea.risk = risk;
+  idea.why = why.slice(0, 3).join(' · ');
+  return idea;
+}
+
+/* ---------- 网络布局（极坐标黄金角 + 浮动，节点上限裁剪） ---------- */
+var canvas = document.getElementById('netCanvas');
+var ctx = canvas.getContext('2d');
+var GOLD = Math.PI * (3 - Math.sqrt(5));
+var MAX_NODES = 70;
+function layout(){
+  var w = canvas.clientWidth, h = canvas.clientHeight;
+  canvas.width = w * Math.min(2, window.devicePixelRatio || 1);
+  canvas.height = h * Math.min(2, window.devicePixelRatio || 1);
+}
+function netPos(i, t){
+  var cx = canvas.clientWidth / 2, cy = canvas.clientHeight / 2;
+  var R = Math.min(cx, cy) * 0.86;
+  var ang = i * GOLD + t * 0.0006;
+  var rad = Math.sqrt(i) * R / Math.sqrt(Math.max(1, state.nodes.length + 8));
+  return { x: cx + Math.cos(ang) * rad, y: cy + Math.sin(ang) * rad };
+}
+var netNodes = [];  // {x,y,r,color,title,rank,idea}
+function syncNet(){
+  layout();
+  netNodes = state.nodes.map(function(n, i){
+    var p = netPos(i, performance.now());
+    return { x: p.x, y: p.y, r: 4 + (n.rank === 'S' ? 3 : n.rank === 'A' ? 1.5 : 0), color: n.domain.color, title: n.title, rank: n.rank, idea: n };
+  });
+}
+var lastFrame = 0;
+function renderNet(t){
+  requestAnimationFrame(renderNet);
+  if(t - lastFrame < 40) return;
+  lastFrame = t;
+  var dpr = Math.min(2, window.devicePixelRatio || 1);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, canvas.clientWidth, canvas.clientHeight);
+  var n = netNodes.length;
+  if(n === 0) return;
+  /* 连线：相邻序 + 同领域最近 */
+  ctx.lineWidth = 1;
+  for(var i = 0; i < n; i++){
+    var a = netNodes[i];
+    if(i > 0){
+      var b = netNodes[i - 1];
+      ctx.strokeStyle = 'rgba(138,147,181,0.10)';
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    }
+    /* 同领域最近（抽样控制，保持流畅） */
+    if(i % 3 === 0){
+      var best = -1, bd = 1e9;
+      for(var k = 0; k < n; k++){
+        if(k === i || netNodes[k].color !== a.color) continue;
+        var dx = netNodes[k].x - a.x, dy = netNodes[k].y - a.y;
+        var dd = dx * dx + dy * dy;
+        if(dd < bd && dd > 0){ bd = dd; best = k; }
+      }
+      if(best >= 0){
+        ctx.strokeStyle = a.color + '22';
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(netNodes[best].x, netNodes[best].y); ctx.stroke();
+      }
+    }
+  }
+  /* 节点 */
+  for(i = 0; i < n; i++){
+    var node = netNodes[i];
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
+    ctx.fillStyle = node.color;
+    ctx.globalAlpha = 0.85;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    if(node.rank === 'S'){
+      ctx.strokeStyle = 'rgba(251,191,36,0.7)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(node.x, node.y, node.r + 2.5, 0, Math.PI * 2); ctx.stroke();
+    }
+  }
+  /* 中心引擎 */
+  var cx = canvas.clientWidth / 2, cy = canvas.clientHeight / 2;
+  var pulse = 1 + Math.sin(t / 400) * 0.12;
+  ctx.beginPath(); ctx.arc(cx, cy, 7 * pulse, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(167,139,250,0.25)';
+  ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, 3.4, 0, Math.PI * 2);
+  ctx.fillStyle = '#a78bfa';
+  ctx.fill();
+}
+canvas.addEventListener('click', function(e){
+  var rect = canvas.getBoundingClientRect();
+  var mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  var best = -1, bd = 900;
+  for(var i = 0; i < netNodes.length; i++){
+    var dx = netNodes[i].x - mx, dy = netNodes[i].y - my;
+    var dd = dx * dx + dy * dy;
+    if(dd < bd){ bd = dd; best = i; }
+  }
+  if(best >= 0) openIdea(netNodes[best].idea);
+});
+window.addEventListener('resize', function(){ layout(); syncNet(); });
+
+/* ---------- 界面渲染 ---------- */
+function renderDomainChips(){
+  var wrap = document.getElementById('domainChips');
+  wrap.innerHTML = '';
+  DOMAINS.forEach(function(d){
+    var b = document.createElement('button');
+    b.className = 'dchip' + (activeDomains[d.id] ? '' : ' off');
+    b.innerHTML = '<span class="dot" style="background:' + d.color + '"></span>' + d.name;
+    b.onclick = function(){
+      activeDomains[d.id] = !activeDomains[d.id];
+      b.className = 'dchip' + (activeDomains[d.id] ? '' : ' off');
+    };
+    wrap.appendChild(b);
+  });
+}
+
+function renderFeed(){
+  var feed = document.getElementById('feed');
+  var html = '';
+  for(var i = 0; i < state.feed.length; i++){
+    var it = state.feed[i];
+    html += ideaHtml(it);
+  }
+  feed.innerHTML = html || '<div class="empty">生成中…</div>';
+}
+function ideaHtml(it){
+  var s = it.scores;
+  var dims = [
+    ['创新', s.nov], ['可行', s.feas], ['应用', s.app], ['社会', s.soc]
+  ].map(function(d){
+    return '<span class="dim">' + d[0] + ' <b>' + d[1] + '</b><span class="dimBar"><i style="width:' + d[1] + '%;background:' + (d[1] >= 75 ? '#34d399' : d[1] >= 55 ? '#fbbf24' : '#f87171') + '"></i></span></span>';
+  }).join('');
+  return '<div class="idea' + (it.score >= 72 ? ' hot' : '') + '" data-id="' + it.id + '">' +
+    '<div class="ideaTop"><span class="ideaTitle">' + it.title + (it.score >= 85 ? '<span class="fresh">新</span>' : '') + '</span>' +
+    '<span class="dtag"><span class="dot" style="background:' + it.domain.color + '"></span>' + it.domain.name + (it.domain2 ? ' × ' + it.domain2.name : '') + '</span>' +
+    '<span class="rank ' + it.rank + '">' + it.rank + '</span><span class="ideaScore">' + it.score + '</span></div>' +
+    '<div class="ideaDesc">' + it.desc + '</div>' +
+    '<div class="dimRow">' + dims + '</div>' +
+    '<div class="ideaRisk">风险等级：<b>' + it.risk + '</b> · ' + it.why + '</div>' +
+    '<div class="why" id="why' + it.id + '">评估理由：' + it.why + '；综合分 = 创新' + s.nov + '×0.30 + 可行' + s.feas + '×0.25 + 应用' + s.app + '×0.25 + 社会' + s.soc + '×0.20。</div>' +
+    '<button class="fav' + (state.fav.indexOf(it.id) >= 0 ? ' on' : '') + '" data-fav="' + it.id + '" title="收藏">★</button></div>';
+}
+document.getElementById('feed').addEventListener('click', function(e){
+  var f = e.target.getAttribute('data-fav');
+  if(f !== null && f !== ''){
+    e.stopPropagation();
+    var id = parseInt(f, 10);
+    var it = null;
+    for(var i = 0; i < state.feed.length; i++) if(state.feed[i].id === id) it = state.feed[i];
+    if(it){
+      var idx = state.fav.indexOf(id);
+      if(idx >= 0) state.fav.splice(idx, 1); else state.fav.push(id);
+      renderFav();
+      renderFeed();
+    }
+    return;
+  }
+  var card = e.target.closest ? e.target.closest('.idea') : null;
+  if(card){
+    var id2 = parseInt(card.getAttribute('data-id'), 10);
+    for(var j = 0; j < state.feed.length; j++){
+      if(state.feed[j].id === id2){ openIdea(state.feed[j]); break; }
+    }
+  }
+});
+function toast(msg){
+  var t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast';
+    t.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#1a2140;border:1px solid #3d4a80;color:#e4e8f5;border-radius:999px;padding:8px 18px;font-size:12.5px;z-index:99;box-shadow:0 6px 24px rgba(0,0,0,.4);transition:opacity .3s;max-width:70vw';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  clearTimeout(t._tm);
+  t.style.opacity = '1';
+  t._tm = setTimeout(function(){ t.style.opacity = '0'; }, 2600);
+}
+function openIdea(idea){
+  var w = document.getElementById('why' + idea.id);
+  if(w){
+    var card = w.closest('.idea');
+    if(card.classList.contains('open')) card.classList.remove('open');
+    else card.classList.add('open');
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    toast(idea.title + ' ｜ ' + idea.rank + '级 ' + idea.score + '分（创新' + idea.scores.nov + ' 可行' + idea.scores.feas + ' 应用' + idea.scores.app + ' 社会' + idea.scores.soc + '）');
+  }
+}
+function renderStats(){
+  var n = state.total;
+  var high = 0, sum = 0;
+  for(var i = 0; i < state.feed.length; i++){
+    if(state.feed[i].score >= 72) high++;
+    sum += state.feed[i].score;
+  }
+  document.getElementById('stCount').textContent = String(n);
+  document.getElementById('stHigh').textContent = String(high);
+  document.getElementById('stHigh').nextElementSibling.textContent = '占比 ' + (n ? Math.round(high / n * 100) : 0) + '%';
+  document.getElementById('stAvg').textContent = n ? (sum / n).toFixed(1) : '—';
+  var doms = {};
+  for(var j = 0; j < state.feed.length; j++) doms[state.feed[j].domain.id] = 1;
+  document.getElementById('stDom').textContent = String(Object.keys(doms).length);
+  document.getElementById('netMeta').textContent = state.nodes.length + ' 个节点 · 实时生长';
+}
+function renderFav(){
+  var el = document.getElementById('favList');
+  var html = '';
+  for(var i = 0; i < state.fav.length; i++){
+    var it = null;
+    for(var j = 0; j < state.feed.length; j++) if(state.feed[j].id === state.fav[i]) it = state.feed[j];
+    if(!it) continue;
+    html += '<div class="favItem"><span class="dot" style="width:8px;height:8px;border-radius:50%;background:' + it.domain.color + '"></span><span class="t">' + it.title + '</span><span class="rank ' + it.rank + '">' + it.rank + '</span><span class="s">' + it.score + '</span></div>';
+  }
+  el.innerHTML = html || '<div class="empty">暂无收藏，点击卡片右上角 ★ 收藏高价值创意</div>';
+}
+
+/* ---------- 生成主流程 ---------- */
+function pushIdea(idea){
+  state.nodes.push(idea);
+  if(state.nodes.length > MAX_NODES) state.nodes.splice(0, state.nodes.length - MAX_NODES);
+  state.feed.unshift(idea);
+  if(state.feed.length > 40) state.feed.length = 40;
+  state.total++;
+  syncNet();
+  renderFeed();
+  renderStats();
+}
+function tryGenerate(){
+  var idea = generateIdea();
+  var guard = 0;
+  while(!idea && guard < 8){ idea = generateIdea(); guard++; }
+  if(idea) pushIdea(idea);
+}
+function restartTimer(){
+  if(state.timer) clearInterval(state.timer);
+  if(state.running) state.timer = setInterval(tryGenerate, state.speed);
+}
+
+/* ---------- 控件 ---------- */
+document.getElementById('startBtn').onclick = function(){
+  state.running = !state.running;
+  this.textContent = state.running ? '暂停生成' : '继续生成';
+  this.className = state.running ? 'btn primary' : 'btn';
+  if(state.running){ tryGenerate(); restartTimer(); }
+  else if(state.timer){ clearInterval(state.timer); state.timer = null; }
+};
+document.getElementById('manualBtn').onclick = function(){
+  tryGenerate();
+  if(state.running){ restartTimer(); }
+};
+document.getElementById('clearBtn').onclick = function(){
+  state.nodes = [];
+  state.feed = [];
+  state.total = 0;
+  syncNet();
+  renderFeed();
+  renderStats();
+  document.getElementById('netMeta').textContent = '0 个节点 · 实时生长';
+};
+var sbtns = document.querySelectorAll('#speedSeg .sbtn');
+for(var si = 0; si < sbtns.length; si++){
+  (function(b){
+    b.onclick = function(){
+      for(var k = 0; k < sbtns.length; k++) sbtns[k].className = 'sbtn' + (sbtns[k] === b ? ' on' : '');
+      state.speed = parseInt(b.getAttribute('data-s'), 10);
+      restartTimer();
+    };
+  })(sbtns[si]);
+}
+document.getElementById('exportBtn').onclick = function(){
+  var rows = [['标题','领域','评级','综合分','创新','可行','应用','社会','风险','简介']];
+  for(var i = 0; i < state.fav.length; i++){
+    var it = null;
+    for(var j = 0; j < state.feed.length; j++) if(state.feed[j].id === state.fav[i]) it = state.feed[j];
+    if(!it) continue;
+    rows.push([it.title, it.domain.name + (it.domain2 ? '×' + it.domain2.name : ''), it.rank, it.score, it.scores.nov, it.scores.feas, it.scores.app, it.scores.soc, it.risk, it.desc]);
+  }
+  if(rows.length === 1){ alert('暂无收藏可导出'); return; }
+  var csv = '\uFEFF' + rows.map(function(r){ return r.map(function(c){ return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'idea-nexus-favorites.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ---------- 启动（默认自动运行） ---------- */
+renderDomainChips();
+renderFeed();
+renderFav();
+renderStats();
+layout();
+requestAnimationFrame(renderNet);
+/* 先产出几个节点让网络立刻生长 */
+for(var pre = 0; pre < 5; pre++) tryGenerate();
+restartTimer();
+</script>
+</body>
+</html>
